@@ -1,0 +1,45 @@
+#include <stdio.h>
+#include <SoftPW.h>
+#include <wiringPi.h>
+#include <piCamera.h>
+//Grupo 16
+ 
+int LED_VERDE=4;
+int MOTOR=8;
+int BOTON=32;
+int val = 0; //val se emplea para el estado del botón
+int state = 0; // 0 es led apagado y 1 es encendido
+int old_val = 0; // almacena el antiguo valor de val
+int cont_Pasos=0;//se emplea para el valor de pasos que da
+double giro=0;//Posicion inicial 0 grados
+int tiempo=0;
+void setup(){
+wiringPiSetup();
+pinMode(BOTON,INPUT);
+pinMode(LED_VERDE,OUTPUT); // establecer led verde como salida
+pinMode(MOTOR, OUTPUT);
+ 
+}
+void loop(){
+ 
+  val= digitalRead(BOTON); // se lee el estado del Boton
+if ((val == HIGH) && (old_val == LOW)){
+state=1-state;
+delay(10);
+}
+old_val = val; // valor del antiguo estado
+if (state==1){
+ digitalWrite(LED_VERDE, HIGH); // enciende el LED
+  while(cont<=200){
+  	cont_Pasos=cont_Pasos+1;
+	giro=giro+1.8;
+delay(1500);
+ 
+}
+    }
+else(state);{
+  digitalWrite(LED_VERDE,LOW); // apagar el LED
+   }
+   
+ 
+}
