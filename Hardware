@@ -1,61 +1,73 @@
-#define VELOCIDAD 2000
+#include <AccelStepper.h>
+#define motorInterfaceType 1
 //Grupo 16 
 
-int direccion= 9;
-int pasos = 13;
-int pulsador=12;
-int reset=10;
-int led=11;
-int ledRojo=7;
-int val = 0; //val se emplea para el estado del botón
-int state = 0; // 0 es led apagado y 1 es encendido
-int old_val = 0; // almacena el antiguo valor de val
+const int dirPin = 10;
+const int stepPin = 13;
+const int pulsador=12;
+const int led=11;
+const int ledRojo=7;
 
-int totalPasos = 200;
+int estadoSistema = LOW;   
+int buttonState;            
+int lastButtonState = LOW;  
+int reading;
+
+unsigned long lastDebounceTime = 0;                                 
+unsigned long debounceDelay = 50;    // tiempo para el antirebote
+
+AccelStepper myStepper(motorInterfaceType, stepPin, dirPin);
 
 
 void setup() {
    //Se define los pines de entrada y salida
-   pinMode(pulsador, INPUT); 
+   pinMode(pulsador, INPUT_PULLUP); 
    pinMode(led, OUTPUT);
    pinMode(ledRojo, OUTPUT);
-   pinMode(direccion, OUTPUT);
-   pinMode(pasos, OUTPUT);
-   pinMode(reset, OUTPUT);
+
+  Serial.begin(9600);
+	myStepper.setMaxSpeed(1000);
+	myStepper.setAcceleration(50);
+	myStepper.setSpeed(200);
+	myStepper.moveTo(200);
+   digitalWrite(led, estadoSistema);
+
 }
 
 void loop() {
-    val= digitalRead(pulsador); // se lee el estado del Boton
-   if ((val == HIGH) && (old_val == LOW)){
-   state=1-state;
-   delay(10);
+   bool estadoPulsador = debounceReadButton();
+   if (estadoPulsador) { 
+   digitalWrite(led, estadoSistema);
+   
+      if (myStepper.distanceToGo() == 0) 
+		   myStepper.moveTo(myStepper.currentPosition());
+         delay(1000);
+	      myStepper.run();
+   }else{
+      digitalWrite(led, estadoSistema);
    }
-   old_val = val; // valor del antiguo estado
-   if (state==1){
-   digitalWrite(led, HIGH); // enciende el LED
-   digitalWrite(ledRojo, LOW);//se encenderá cuando complete la vuelta, 
-   //mientras tanto el ledRojo se encontrara apagado
-   //Para fijar la dirección (dirPin)
-   
-   
-      digitalWrite(reset, LOW);
-      delay(2000);
-      digitalWrite(reset, HIGH);
-      digitalWrite(direccion, HIGH);
+   lastButtonState = reading;
+  }
 
-   for(int i=0; i<totalPasos; i++){ // cuenta los pasos 
-   //y cuando llega a 200 deja de rotar y se enciende el led rojo como alerta de que ya termino
-      digitalWrite(pasos, HIGH);
-      digitalWrite(pasos, LOW);
-      delayMicroseconds(VELOCIDAD);
-   
-   }
-   digitalWrite(ledRojo, HIGH);
-   }
 
-   else(state);{
-  digitalWrite(led,LOW); // apagar el LED
-  digitalWrite(ledRojo, LOW);
-   }
+
+int debounceReadButton(){ 
+  reading = digitalRead(pulsador);
+  if (reading != lastButtonState) {
+    // almacenamos el tiempo actual desde que se detecto el cambio
+    lastDebounceTime = millis();
+  }
+// Solo si el pulsador a estado más tiempo que el de anti-rebote programado, cambiaremos el valor de la variable buttonState
+  if ((millis() - lastDebounceTime) > debounceDelay) {
+    
+    if (reading != buttonState) {
+      buttonState = reading;
+
+      if (buttonState == LOW) {
+        estadoSistema = !estadoSistema;
+      }
+    }
+  }
+  return estadoSistema;
 
 }
