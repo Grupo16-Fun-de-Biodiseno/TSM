@@ -27,7 +27,7 @@ void setup() {
 
   Serial.begin(9600);
 	myStepper.setMaxSpeed(1000);
-	myStepper.setAcceleration(50);
+	myStepper.setAcceleration(5);
 	myStepper.setSpeed(200);
 	myStepper.moveTo(200);
    digitalWrite(led, estadoSistema);
@@ -37,14 +37,19 @@ void setup() {
 void loop() {
    bool estadoPulsador = debounceReadButton();
    if (estadoPulsador) { 
-   digitalWrite(led, estadoSistema);
-   
-      if (myStepper.distanceToGo() == 0) 
-		   myStepper.moveTo(myStepper.currentPosition());
-         delay(1000);
-	      myStepper.run();
-   }else{
       digitalWrite(led, estadoSistema);
+      myStepper.run();
+      delay(2000);
+      if (myStepper.distanceToGo() == 0) {
+		    myStepper.moveTo(myStepper.currentPosition());
+        digitalWrite(led, LOW);
+        digitalWrite(ledRojo, HIGH);
+        delay(20);
+      } 
+   }
+   else{
+        digitalWrite(led, estadoSistema);
+        digitalWrite(ledRojo, LOW);
    }
    lastButtonState = reading;
   }
@@ -54,9 +59,9 @@ void loop() {
 int debounceReadButton(){ 
   reading = digitalRead(pulsador);
   if (reading != lastButtonState) {
-    
     lastDebounceTime = millis();
   }
+// Solo si el pulsador a estado más tiempo que el de anti-rebote programado, cambiaremos el valor de la variable buttonState
   if ((millis() - lastDebounceTime) > debounceDelay) {
     
     if (reading != buttonState) {
