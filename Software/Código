@@ -61,7 +61,7 @@ int debounceReadButton(){
   if (reading != lastButtonState) {
     lastDebounceTime = millis();
   }
-// Solo si el pulsador a estado más tiempo que el de anti-rebote programado, cambiaremos el valor de la variable buttonState
+
   if ((millis() - lastDebounceTime) > debounceDelay) {
     
     if (reading != buttonState) {
