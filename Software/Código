@@ -12,6 +12,7 @@ int estadoSistema = LOW;
 int buttonState;            
 int lastButtonState = LOW;  
 int reading;
+int contador=-2;
 
 unsigned long lastDebounceTime = 0;                                 
 unsigned long debounceDelay = 50;    // tiempo para el antirebote
@@ -24,33 +25,40 @@ void setup() {
    pinMode(pulsador, INPUT_PULLUP); 
    pinMode(led, OUTPUT);
    pinMode(ledRojo, OUTPUT);
+   digitalWrite(led, estadoSistema);
 
   Serial.begin(9600);
 	myStepper.setMaxSpeed(1000);
-	myStepper.setAcceleration(5);
+	myStepper.setAcceleration(50);
 	myStepper.setSpeed(200);
 	myStepper.moveTo(200);
-   digitalWrite(led, estadoSistema);
 
 }
 
 void loop() {
    bool estadoPulsador = debounceReadButton();
-   if (estadoPulsador) { 
+   if (estadoPulsador) { //funciones cuando el sistema este encendido
       digitalWrite(led, estadoSistema);
       myStepper.run();
-      delay(2000);
+      contador++;
+      delay(2000);//en este delay se añade o quita tiempo para que el motor gire más despacio o más rapido
+      
       if (myStepper.distanceToGo() == 0) {
-		    myStepper.moveTo(myStepper.currentPosition());
         digitalWrite(led, LOW);
         digitalWrite(ledRojo, HIGH);
-        delay(20);
-      } 
-   }
-   else{
-        digitalWrite(led, estadoSistema);
+        delay(100);
         digitalWrite(ledRojo, LOW);
-   }
+        contador=0;
+        
+      }
+   } 
+    else{//funciones cuando el sistema se encuentre apagado
+      digitalWrite(led, estadoSistema);
+      digitalWrite(ledRojo, LOW);
+      
+    }
+    Serial.println(contador);
+ 
    lastButtonState = reading;
   }
 
@@ -61,7 +69,7 @@ int debounceReadButton(){
   if (reading != lastButtonState) {
     lastDebounceTime = millis();
   }
-
+// Solo si el pulsador a estado más tiempo que el de anti-rebote programado, cambiaremos el valor de la variable buttonState
   if ((millis() - lastDebounceTime) > debounceDelay) {
     
     if (reading != buttonState) {
@@ -70,8 +78,9 @@ int debounceReadButton(){
       if (buttonState == LOW) {
         estadoSistema = !estadoSistema;
       }
-    }
+    
   }
   return estadoSistema;
 
+}
 }
